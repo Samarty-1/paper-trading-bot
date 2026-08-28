@@ -143,6 +143,28 @@ def print_status(state, last_close, last_date):
     print(f"Cash: ${state['cash']:.2f}  |  Equity: ${equity:.2f}  ({strat_return:+.1f}%)")
     print(f"Buy & hold benchmark equity: ${bh_equity:.2f}  ({bh_return:+.1f}%)")
     print(f"Total trades so far: {len(state['trade_log'])}")
+    print_sentiment_advisory(state["ticker"])
+
+
+def print_sentiment_advisory(ticker):
+    """Advisory-only headline sentiment read (see sentiment.py for why this
+    doesn't feed the entry/exit logic above). Skipped quietly if the optional
+    sentiment dependencies (scikit-learn/datasets/joblib) aren't installed."""
+    try:
+        import sentiment
+    except ImportError:
+        return
+    try:
+        result = sentiment.score_ticker_sentiment(ticker)
+    except Exception as exc:
+        print(f"(sentiment advisory unavailable: {exc})")
+        return
+    if result["label"] == "no_data":
+        return
+    print(
+        f"Advisory only, not a trade signal - headline sentiment: {result['label']} "
+        f"(score {result['sentiment_score']:+.2f}, {result['n_headlines']} headlines)"
+    )
 
 
 if __name__ == "__main__":

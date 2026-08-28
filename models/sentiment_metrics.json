@@ -1,0 +1,6 @@
+{
+  "trained_at": "2026-08-28T14:38:24.907216+00:00",
+  "dataset": "zeroshot/twitter-financial-news-sentiment",
+  "validation_accuracy": 0.8299832495812395,
+  "validation_f1_macro": 0.7728540650004702
+}

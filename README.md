@@ -67,6 +67,27 @@ data/raw/         reuses indicators.py)  upsert              -- see          (et
   pre-cleaned, pre-computed bars from the warehouse via
   `etl.load.read_from_warehouse()`.
 
+## Live sentiment advisory (trained on Hugging Face data, not part of the strategy)
+
+`sentiment.py` trains a TF-IDF + Logistic Regression classifier on Hugging
+Face's [`zeroshot/twitter-financial-news-sentiment`](https://huggingface.co/datasets/zeroshot/twitter-financial-news-sentiment)
+dataset (9,543 train / 2,388 validation rows) and applies it live to each
+ticker's current Yahoo Finance headlines. Held-out validation result:
+**83.0% accuracy, 0.773 macro F1** across 3 classes (bearish/bullish/neutral)
+— a real number from the dataset's own validation split, not cherry-picked.
+
+This is printed as an advisory line in `paper_trade.py`'s status output —
+it does **not** feed the EMA/RSI/ATR entry/exit logic above. Two reasons:
+
+1. The HF dataset has no publish dates, so there's no way to backtest this
+   signal against historical price action — folding an unvalidated rule into
+   the strategy would contradict the "prove it helps before shipping it"
+   standard this repo already holds itself to (see the rejected ADX filter
+   above, which *was* tested and made every metric worse).
+2. Optional dependency: if `scikit-learn`/`datasets`/`joblib` aren't
+   installed, `paper_trade.py` skips the advisory line quietly rather than
+   failing — the core rule-based strategy has no hard dependency on it.
+
 ## Setup
 
 ```

@@ -77,7 +77,7 @@ the diversification benefit that shows up in the other two regimes
 temporarily disappears. That's not a bug in the test, it's the honest
 result of that specific macro regime.
 
-Worth contrasting with [`quant-trading-strategy-r`](../quant-trading-strategy-r)'s
+Worth contrasting with [`dual-ma-rsi-strategy-r`](https://github.com/Samarty-1/dual-ma-rsi-strategy-r)'s
 diversification test, which found the *opposite* — spreading capital across
 more stocks made Sharpe worse. Not a contradiction: that repo diversified an
 AAPL-tuned parameter set across other individual large-cap equities (same

@@ -77,6 +77,16 @@ the diversification benefit that shows up in the other two regimes
 temporarily disappears. That's not a bug in the test, it's the honest
 result of that specific macro regime.
 
+Worth contrasting with [`quant-trading-strategy-r`](../quant-trading-strategy-r)'s
+diversification test, which found the *opposite* — spreading capital across
+more stocks made Sharpe worse. Not a contradiction: that repo diversified an
+AAPL-tuned parameter set across other individual large-cap equities (same
+asset class, correlated with each other and with AAPL), while this
+diversifies an unmodified rule across genuinely different asset classes
+(equities, gold, bonds, commodities, international). Diversification only
+helps when what's being combined doesn't already move together — see that
+repo's README for the full write-up.
+
 Run it yourself: `python portfolio_backtest.py` (writes
 `portfolio_backtest_results.csv`). To actually paper-trade this diversified
 book rather than just backtest it, run `paper_trade.py --ticker <T>`

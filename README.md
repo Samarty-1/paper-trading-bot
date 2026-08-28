@@ -36,6 +36,54 @@ call this a strong alpha strategy.
   applies leverage adaptively (more when calm, less when choppy) and
   measurably cut max drawdown in every regime without hurting Sharpe.
 
+## Why Sharpe is weak, and the one thing that actually raised it (`portfolio_backtest.py`)
+
+Digging into the trade log (not just the summary stats) shows *why* the
+single-instrument Sharpe above is only 0.0-0.35: **Exposure Time is only
+~8-17%** — the strategy sits in cash 83-92% of the time, waiting for an
+EMA crossover. That idle time isn't neutral: a calendar-time Sharpe ratio
+(computed on daily returns including the flat, zero-return cash days) gets
+mechanically diluted by all those zero days, *even when the per-trade edge
+is genuinely good* — Profit Factor is 1.78-2.62 on SPY/QQQ/AAPL individually,
+i.e. real, positive expectancy per trade. The problem isn't edge quality,
+it's how rarely that edge gets deployed against calendar time.
+
+The standard trend-following fix for exactly this (how CTAs turn a ~0.3-0.5
+single-instrument Sharpe into a ~0.7-1.0+ fund-level Sharpe) is **not**
+tuning the strategy's parameters — it's running the same, completely
+unmodified strategy across instruments from *different asset classes* whose
+trades don't fire on the same calendar days, so the combined portfolio is
+"in a trade" far more of the time than any single instrument, even though
+each instrument's own trade frequency is unchanged. `portfolio_backtest.py`
+tests this directly: same `EmaTrendRsiAtr`, zero parameters touched, run
+independently on SPY/QQQ/AAPL/MSFT plus GLD (gold), TLT (long bonds), DBC
+(commodities), and EFA (international equities), then combined into one
+equal-weighted portfolio equity curve.
+
+| Regime | Avg. single-instrument Sharpe | Portfolio Sharpe | Portfolio Max DD |
+|---|---|---|---|
+| Bull market (8y) | 0.26 | **0.68** | -1.62% |
+| 2008 financial crisis | 0.39 | **0.84** | -1.47% |
+| 2022 rate-hike bear | -0.43 | -0.45 | -1.25% |
+
+Diversification roughly **doubled Sharpe** in the bull market and GFC
+regimes, and cut max drawdown to under -2% in both — a real, mechanical
+result of decorrelated trade timing, not a fitted parameter. It's reported
+honestly for 2022 too, where it **didn't help**: 2022 was a rare
+"everything falls together" regime (the same well-documented reason 60/40
+portfolios had their worst year in decades that year) — synchronized global
+rate hikes hit stocks, bonds, and international equities simultaneously, so
+the diversification benefit that shows up in the other two regimes
+temporarily disappears. That's not a bug in the test, it's the honest
+result of that specific macro regime.
+
+Run it yourself: `python portfolio_backtest.py` (writes
+`portfolio_backtest_results.csv`). To actually paper-trade this diversified
+book rather than just backtest it, run `paper_trade.py --ticker <T>`
+independently for each of the 8 tickers above (each gets its own
+`state_<T>.json`) — there's no separate orchestration layer for this, since
+each ticker already runs and persists state independently.
+
 ## Architecture
 
 Market data flows through a small ETL pipeline before the strategy ever sees

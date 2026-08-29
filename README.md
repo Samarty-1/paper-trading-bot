@@ -87,6 +87,50 @@ diversifies an unmodified rule across genuinely different asset classes
 helps when what's being combined doesn't already move together — see that
 repo's README for the full write-up.
 
+### The claim above was an assertion. Here it is measured.
+
+Calling the portfolio result "a real, mechanical result of decorrelated trade
+timing, not a fitted parameter" is the right intuition, but as written it was
+an argument rather than evidence. Nothing above rules out the possibility that
+a Sharpe of 0.65–0.84 is just what you get from searching a parameter grid
+until something looks good.
+
+[`backtest-overfit-audit`](https://github.com/Samarty-1/backtest-overfit-audit)
+tests it. It sweeps this strategy's full 144-configuration parameter grid
+(`fast_len` × `slow_len` × `rsi_long_max` × `atr_stop_mult`), then measures
+the maximum Sharpe a search that size reaches **by chance** — via a stationary
+block bootstrap that demeans every configuration to impose a true Sharpe of
+zero while preserving volatility, serial correlation and, critically, the
+correlation *between* configurations. The published parameters are then scored
+against that null.
+
+| | 4 US equities | 8 instruments, 4 asset classes |
+|---|---|---|
+| Annualized Sharpe | 0.83 | **1.10** |
+| Days with any exposure | 29.8% | **49.8%** |
+| Deflated Sharpe (bootstrap) | 0.880 — fails | **0.992 — passes** (p = 0.008) |
+| Multiple-testing haircut (BHY) | 0.62, not significant | **0.95, significant at 5%** |
+
+**The single-instrument version does not survive the multiple-testing
+correction. The diversified version does.** Two independent statistics agree,
+and diversification costs nothing on this axis because widening the instrument
+set is not an additional hypothesis about the strategy — the grid, the rules
+and the parameters are identical.
+
+So the claim in this section now has evidence behind it, and the contrast with
+tuning is sharper than originally stated: **tuning cannot fix a backtest that
+fails deflation, because every additional configuration raises the bar it has
+to clear.** Increasing exposure to an edge that already exists does not.
+
+One honest caveat on comparing the tables. The audit re-implements this
+strategy vectorised (the `backtesting` library is far too slow for a 144-point
+sweep re-run across eight instruments), uses a binary position rather than this
+repo's volatility-targeted sizing, and runs a 10-year window against the 8-year
+one above. Entry/exit rules, stop behaviour and next-bar-open execution match,
+so the *direction and mechanism* are a genuine independent reproduction — but
+the absolute Sharpe of 1.10 is not the same measurement as the 0.65 in the
+table above and should not be read as a restatement of it.
+
 Run it yourself: `python portfolio_backtest.py` (writes
 `portfolio_backtest_results.csv`). To actually paper-trade this diversified
 book rather than just backtest it, run `paper_trade.py --ticker <T>`
